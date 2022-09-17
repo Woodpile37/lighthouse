@@ -71,6 +71,7 @@ impl<TSpec: EthSpec> Encoder<RPCCodedResponse<TSpec>> for SSZSnappyInboundCodec<
                 RPCResponse::BlocksByRange(res) => res.as_ssz_bytes(),
                 RPCResponse::TxBlobsByRange(res) => res.as_ssz_bytes(),
                 RPCResponse::BlocksByRoot(res) => res.as_ssz_bytes(),
+                RPCResponse::BlobsByRange(res) => res.as_ssz_bytes(),
                 RPCResponse::Pong(res) => res.data.as_ssz_bytes(),
                 RPCResponse::MetaData(res) =>
                 // Encode the correct version of the MetaData response based on the negotiated version.

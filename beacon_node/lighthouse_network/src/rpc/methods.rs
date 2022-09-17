@@ -330,6 +330,7 @@ impl<T: EthSpec> RPCCodedResponse<T> {
                 RPCResponse::BlocksByRange(_) => true,
                 RPCResponse::TxBlobsByRange(_) => true,
                 RPCResponse::BlocksByRoot(_) => true,
+                RPCResponse::BlobsByRange(_) => true,
                 RPCResponse::Pong(_) => false,
                 RPCResponse::MetaData(_) => false,
             },
@@ -364,6 +365,7 @@ impl<T: EthSpec> RPCResponse<T> {
             RPCResponse::Status(_) => Protocol::Status,
             RPCResponse::BlocksByRange(_) => Protocol::BlocksByRange,
             RPCResponse::BlocksByRoot(_) => Protocol::BlocksByRoot,
+            RPCResponse::BlobsByRange(_) => Protocol::BlobsByRange,
             RPCResponse::Pong(_) => Protocol::Ping,
             RPCResponse::MetaData(_) => Protocol::MetaData,
         }
@@ -401,6 +403,9 @@ impl<T: EthSpec> std::fmt::Display for RPCResponse<T> {
             }
             RPCResponse::BlocksByRoot(block) => {
                 write!(f, "BlocksByRoot: Block slot: {}", block.slot())
+            } 
+            RPCResponse::BlobsByRange(blob) => {
+                write!(f, "BlobsByRange: Blob slot: {}", blob.len())
             }
             RPCResponse::Pong(ping) => write!(f, "Pong: {}", ping.data),
             RPCResponse::MetaData(metadata) => write!(f, "Metadata: {}", metadata.seq_number()),
