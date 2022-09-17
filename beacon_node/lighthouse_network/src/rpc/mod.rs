@@ -299,6 +299,7 @@ where
                     match end {
                         ResponseTermination::BlocksByRange => Protocol::BlocksByRange,
                         ResponseTermination::BlocksByRoot => Protocol::BlocksByRoot,
+                        ResponseTermination::BlobsByRange => Protocol::BlobsByRange,
                     },
                 ),
             },
