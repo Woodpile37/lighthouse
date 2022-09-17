@@ -470,7 +470,7 @@ impl<T: BeaconChainTypes> Worker<T> {
                     Ok(None) => {
                         error!(
                             self.log,
-                            "Block in the chain is not in the store";
+                            "Blob in the chain is not in the store";
                             "request_root" => ?root
                         );
                         break;
@@ -519,7 +519,7 @@ impl<T: BeaconChainTypes> Worker<T> {
                 // send the stream terminator
                 self.send_network_message(NetworkMessage::SendResponse {
                     peer_id,
-                    response: Response::BlocksByRange(None),
+                    response: Response::BlobsByRange(None),
                     id: request_id,
                 });
             }
