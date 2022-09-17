@@ -39,6 +39,7 @@ pub enum OutboundRequest<TSpec: EthSpec> {
     BlocksByRange(OldBlocksByRangeRequest),
     TxBlobsByRange(TxBlobsByRangeRequest),
     BlocksByRoot(BlocksByRootRequest),
+    BlobsByRange(BlobsByRangeRequest),
     Ping(Ping),
     MetaData(PhantomData<TSpec>),
 }
