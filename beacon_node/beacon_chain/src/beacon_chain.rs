@@ -98,7 +98,6 @@ use task_executor::{ShutdownReason, TaskExecutor};
 use tree_hash::TreeHash;
 use types::beacon_state::CloneConfig;
 use types::*;
-
 pub use crate::canonical_head::{CanonicalHead, CanonicalHeadRwLock};
 pub use fork_choice::CountUnrealized;
 
