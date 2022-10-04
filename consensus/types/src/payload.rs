@@ -1,4 +1,5 @@
 use crate::{test_utils::TestRandom, *};
+use core::hash::Hasher;
 use derivative::Derivative;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};

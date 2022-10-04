@@ -1,3 +1,4 @@
+use crate::kzg_proof::KzgProof;
 use crate::{Blob, EthSpec, Hash256, Slot};
 use serde_derive::{Deserialize, Serialize};
 use ssz::Encode;
@@ -22,6 +23,6 @@ impl<E: EthSpec> BlobsSidecar<E> {
         // Fixed part
         Self::empty().as_ssz_bytes().len()
             // Max size of variable length `blobs` field
-            + (E::max_object_list_size() * <Blob<E::FieldElementsPerBlob> as Encode>::ssz_fixed_len())
+            + (E::max_blobs_per_block() * <Blob<E::FieldElementsPerBlob> as Encode>::ssz_fixed_len())
     }
 }
