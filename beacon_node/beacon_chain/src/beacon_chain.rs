@@ -84,7 +84,7 @@ use state_processing::{
     },
     per_slot_processing,
     state_advance::{complete_state_advance, partial_state_advance},
-    BlockSignatureStrategy, SigVerifiedOp, VerifyBlockRoot, VerifyOperation,
+    BlockSignatureStrategy, ConsensusContext, SigVerifiedOp, VerifyBlockRoot, VerifyOperation,
 };
 use std::cmp::Ordering;
 use std::collections::HashMap;
@@ -3516,7 +3516,6 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
         }
 
         let slot = state.slot();
-        let proposer_index = state.get_beacon_proposer_index(state.slot(), &self.spec)? as u64;
 
         let sync_aggregate = if matches!(&state, BeaconState::Base(_)) {
             None
@@ -3688,12 +3687,14 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
             ProduceBlockVerification::VerifyRandao => BlockSignatureStrategy::VerifyRandao,
             ProduceBlockVerification::NoVerification => BlockSignatureStrategy::NoVerification,
         };
+        // Use a context without block root or proposer index so that both are checked.
+        let mut ctxt = ConsensusContext::new(block.slot());
         per_block_processing(
             &mut state,
             &block,
-            None,
             signature_strategy,
             VerifyBlockRoot::True,
+            &mut ctxt,
             &self.spec,
         )?;
         drop(process_timer);
