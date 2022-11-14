@@ -23,8 +23,8 @@ use tokio_util::{
 use types::BlobsSidecar;
 use types::SignedBlobsSidecar;
 use types::{
-    BeaconBlock, BeaconBlockAltair, BeaconBlockBase, BeaconBlockMerge, Blob, EthSpec, ForkContext,
-    ForkName, Hash256, MainnetEthSpec, Signature, SignedBeaconBlock,
+    BeaconBlock, BeaconBlockAltair, BeaconBlockBase, BeaconBlockMerge, Blob, EmptyBlock, EthSpec,
+    ForkContext, ForkName, Hash256, MainnetEthSpec, Signature, SignedBeaconBlock,
 };
 
 lazy_static! {

@@ -88,6 +88,7 @@ pub enum BlockProcessingError {
         index: usize,
         length: usize,
     },
+    WithdrawalCredentialsInvalid,
 }
 
 impl From<BeaconStateError> for BlockProcessingError {
