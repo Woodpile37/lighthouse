@@ -6,7 +6,6 @@ use crate::attestation_verification::{
 use crate::attester_cache::{AttesterCache, AttesterCacheKey};
 use crate::beacon_proposer_cache::compute_proposer_duties_from_head;
 use crate::beacon_proposer_cache::BeaconProposerCache;
-use crate::blob_verification::{BlobError, VerifiedBlobsSidecar};
 use crate::block_times_cache::BlockTimesCache;
 use crate::block_verification::{
     check_block_is_finalized_descendant, check_block_relevancy, get_block_root,
@@ -102,11 +101,12 @@ use task_executor::{ShutdownReason, TaskExecutor};
 use tree_hash::TreeHash;
 use types::beacon_state::CloneConfig;
 use types::*;
+use types::signed_block_and_blobs::BlockMaybeBlobs;
 
 pub type ForkChoiceError = fork_choice::Error<crate::ForkChoiceStoreError>;
 
 /// Alias to appease clippy.
-type HashBlockTuple<E> = (Hash256, Arc<SignedBeaconBlock<E>>);
+type HashBlockTuple<E> = (Hash256, BlockMaybeBlobs<E>);
 
 /// The time-out before failure during an operation to take a read/write RwLock on the block
 /// processing cache.
@@ -1780,23 +1780,6 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
         })
     }
 
-    /// Accepts some `BlobsSidecar` received over from the network and attempts to verify it,
-    /// returning `Ok(_)` if it is valid to be (re)broadcast on the gossip network.
-    pub fn verify_blobs_sidecar_for_gossip<'a>(
-        &self,
-        blobs_sidecar: &'a BlobsSidecar<T::EthSpec>,
-    ) -> Result<VerifiedBlobsSidecar<'a, T>, BlobError> {
-        metrics::inc_counter(&metrics::BLOBS_SIDECAR_PROCESSING_REQUESTS);
-        let _timer = metrics::start_timer(&metrics::BLOBS_SIDECAR_GOSSIP_VERIFICATION_TIMES);
-        VerifiedBlobsSidecar::verify(blobs_sidecar, self).map(|v| {
-            if let Some(_event_handler) = self.event_handler.as_ref() {
-                // TODO: Handle sse events
-            }
-            metrics::inc_counter(&metrics::BLOBS_SIDECAR_PROCESSING_SUCCESSES);
-            v
-        })
-    }
-
     /// Accepts some attestation-type object and attempts to verify it in the context of fork
     /// choice. If it is valid it is applied to `self.fork_choice`.
     ///
@@ -2211,7 +2194,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
     /// This method is potentially long-running and should not run on the core executor.
     pub fn filter_chain_segment(
         self: &Arc<Self>,
-        chain_segment: Vec<Arc<SignedBeaconBlock<T::EthSpec>>>,
+        chain_segment: Vec<BlockMaybeBlobs<T::EthSpec>>,
     ) -> Result<Vec<HashBlockTuple<T::EthSpec>>, ChainSegmentResult<T::EthSpec>> {
         // This function will never import any blocks.
         let imported_blocks = 0;
@@ -2317,7 +2300,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
     /// `Self::process_block`.
     pub async fn process_chain_segment(
         self: &Arc<Self>,
-        chain_segment: Vec<Arc<SignedBeaconBlock<T::EthSpec>>>,
+        chain_segment: Vec<BlockMaybeBlobs<T::EthSpec>>,
         count_unrealized: CountUnrealized,
     ) -> ChainSegmentResult<T::EthSpec> {
         let mut imported_blocks = 0;
@@ -2339,7 +2322,10 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
             }
         };
 
-        while let Some((_root, block)) = filtered_chain_segment.first() {
+        while let Some((_root, block_wrapper)) = filtered_chain_segment.first() {
+
+            let block: &SignedBeaconBlock<T::EthSpec> = block_wrapper.block();
+
             // Determine the epoch of the first block in the remaining segment.
             let start_epoch = block.slot().epoch(T::EthSpec::slots_per_epoch());
 
@@ -2350,7 +2336,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
             let last_index = filtered_chain_segment
                 .iter()
                 .position(|(_root, block)| {
-                    block.slot().epoch(T::EthSpec::slots_per_epoch()) > start_epoch
+                    block.block().slot().epoch(T::EthSpec::slots_per_epoch()) > start_epoch
                 })
                 .unwrap_or(filtered_chain_segment.len());
 
@@ -2416,17 +2402,17 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
     /// Returns an `Err` if the given block was invalid, or an error was encountered during
     pub async fn verify_block_for_gossip(
         self: &Arc<Self>,
-        block: Arc<SignedBeaconBlock<T::EthSpec>>,
+        block_wrapper: BlockMaybeBlobs<T::EthSpec>,
     ) -> Result<GossipVerifiedBlock<T>, BlockError<T::EthSpec>> {
         let chain = self.clone();
         self.task_executor
             .clone()
             .spawn_blocking_handle(
                 move || {
-                    let slot = block.slot();
-                    let graffiti_string = block.message().body().graffiti().as_utf8_lossy();
+                    let slot = block_wrapper.block().slot();
+                    let graffiti_string = block_wrapper.block().message().body().graffiti().as_utf8_lossy();
 
-                    match GossipVerifiedBlock::new(block, &chain) {
+                    match GossipVerifiedBlock::new(block_wrapper, &chain) {
                         Ok(verified) => {
                             debug!(
                                 chain.log,
@@ -2482,9 +2468,6 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
         // Increment the Prometheus counter for block processing requests.
         metrics::inc_counter(&metrics::BLOCK_PROCESSING_REQUESTS);
 
-        // Clone the block so we can provide it to the event handler.
-        let block = unverified_block.block().clone();
-
         // A small closure to group the verification and import errors.
         let chain = self.clone();
         let import_block = async move {
@@ -2495,6 +2478,8 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
                 .await
         };
 
+        let slot = unverified_block.block().slot();
+
         // Verify and import the block.
         match import_block.await {
             // The block was successfully verified and imported. Yay.
@@ -2503,7 +2488,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
                     self.log,
                     "Beacon block imported";
                     "block_root" => ?block_root,
-                    "block_slot" => %block.slot(),
+                    "block_slot" => slot,
                 );
 
                 // Increment the Prometheus counter for block processing successes.
@@ -2629,7 +2614,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
     #[allow(clippy::too_many_arguments)]
     fn import_block(
         &self,
-        signed_block: Arc<SignedBeaconBlock<T::EthSpec>>,
+        block_wrapper: BlockMaybeBlobs<T::EthSpec>,
         block_root: Hash256,
         mut state: BeaconState<T::EthSpec>,
         confirmed_state_roots: Vec<Hash256>,
@@ -2638,6 +2623,7 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
         parent_block: SignedBlindedBeaconBlock<T::EthSpec>,
         parent_eth1_finalization_data: Eth1FinalizationData,
     ) -> Result<Hash256, BlockError<T::EthSpec>> {
+        let signed_block = block_wrapper.block();
         let current_slot = self.slot()?;
         let current_epoch = current_slot.epoch(T::EthSpec::slots_per_epoch());
 
