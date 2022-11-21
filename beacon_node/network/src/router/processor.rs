@@ -187,6 +187,7 @@ impl<T: BeaconChainTypes> Processor<T> {
                     unreachable!("Block lookups do not request BBRange requests")
                 }
                 id @ (SyncId::BackFillSync { .. } | SyncId::RangeSync { .. }) => id,
+                SyncId::RangeBlockBlob { id } => unimplemented!("do it"),
             },
             RequestId::Router => unreachable!("All BBRange requests belong to sync"),
         };
@@ -245,6 +246,8 @@ impl<T: BeaconChainTypes> Processor<T> {
                 SyncId::BackFillSync { .. } | SyncId::RangeSync { .. } => {
                     unreachable!("Batch syncing do not request BBRoot requests")
                 }
+
+                SyncId::RangeBlockBlob { id } => unimplemented!("do it"),
             },
             RequestId::Router => unreachable!("All BBRoot requests belong to sync"),
         };
@@ -275,6 +278,8 @@ impl<T: BeaconChainTypes> Processor<T> {
                 SyncId::BackFillSync { .. } | SyncId::RangeSync { .. } => {
                     unreachable!("Batch syncing do not request BBRoot requests")
                 }
+
+                SyncId::RangeBlockBlob { id } => unimplemented!("do it"),
             },
             RequestId::Router => unreachable!("All BBRoot requests belong to sync"),
         };

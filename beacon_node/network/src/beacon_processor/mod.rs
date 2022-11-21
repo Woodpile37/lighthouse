@@ -1310,6 +1310,11 @@ impl<T: BeaconChainTypes> BeaconProcessor<T> {
                             Work::UnknownBlockAggregate { .. } => {
                                 unknown_block_aggregate_queue.push(work)
                             }
+                            Work::BlobsByRootsRequest {
+                                peer_id,
+                                request_id,
+                                request,
+                            } => todo!(),
                         }
                     }
                 }
