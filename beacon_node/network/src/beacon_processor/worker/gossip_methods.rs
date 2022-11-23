@@ -854,7 +854,7 @@ impl<T: BeaconChainTypes> Worker<T> {
                     "gossip_block_low",
                 );
                 return None;
-            }  
+            }
             Err(blob_errors) => unimplemented!("handle")
         };
 
