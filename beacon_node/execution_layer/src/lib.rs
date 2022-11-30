@@ -603,21 +603,15 @@ impl<T: EthSpec> ExecutionLayer<T> {
     ///
     /// The result will be returned from the first node that returns successfully. No more nodes
     /// will be contacted.
-    #[allow(clippy::too_many_arguments)]
     pub async fn get_payload<Payload: AbstractExecPayload<T>>(
         &self,
         parent_hash: ExecutionBlockHash,
-        timestamp: u64,
-        prev_randao: Hash256,
-        proposer_index: u64,
+        payload_attributes: &PayloadAttributes,
         forkchoice_update_params: ForkchoiceUpdateParameters,
         builder_params: BuilderParams,
         current_fork: ForkName,
-        #[cfg(feature = "withdrawals")] withdrawals: Option<Vec<Withdrawal>>,
         spec: &ChainSpec,
     ) -> Result<BlockProposalContents<T, Payload>, Error> {
-        let suggested_fee_recipient = self.get_suggested_fee_recipient(proposer_index).await;
-
         match Payload::block_type() {
             BlockType::Blinded => {
                 let _timer = metrics::start_timer_vec(
@@ -626,14 +620,10 @@ impl<T: EthSpec> ExecutionLayer<T> {
                 );
                 self.get_blinded_payload(
                     parent_hash,
-                    timestamp,
-                    prev_randao,
-                    suggested_fee_recipient,
+                    payload_attributes,
                     forkchoice_update_params,
                     builder_params,
                     current_fork,
-                    #[cfg(feature = "withdrawals")]
-                    withdrawals,
                     spec,
                 )
                 .await
@@ -645,30 +635,22 @@ impl<T: EthSpec> ExecutionLayer<T> {
                 );
                 self.get_full_payload(
                     parent_hash,
-                    timestamp,
-                    prev_randao,
-                    suggested_fee_recipient,
+                    payload_attributes,
                     forkchoice_update_params,
                     current_fork,
-                    #[cfg(feature = "withdrawals")]
-                    withdrawals,
                 )
                 .await
             }
         }
     }
 
-    #[allow(clippy::too_many_arguments)]
     async fn get_blinded_payload<Payload: AbstractExecPayload<T>>(
         &self,
         parent_hash: ExecutionBlockHash,
-        timestamp: u64,
-        prev_randao: Hash256,
-        suggested_fee_recipient: Address,
+        payload_attributes: &PayloadAttributes,
         forkchoice_update_params: ForkchoiceUpdateParameters,
         builder_params: BuilderParams,
         current_fork: ForkName,
-        #[cfg(feature = "withdrawals")] withdrawals: Option<Vec<Withdrawal>>,
         spec: &ChainSpec,
     ) -> Result<BlockProposalContents<T, Payload>, Error> {
         if let Some(builder) = self.builder() {
@@ -688,13 +670,9 @@ impl<T: EthSpec> ExecutionLayer<T> {
                         builder.get_builder_header::<T, Payload>(slot, parent_hash, &pubkey),
                         self.get_full_payload_caching(
                             parent_hash,
-                            timestamp,
-                            prev_randao,
-                            suggested_fee_recipient,
+                            payload_attributes,
                             forkchoice_update_params,
                             current_fork,
-                            #[cfg(feature = "withdrawals")]
-                            withdrawals,
                         )
                     );
 
@@ -743,7 +721,7 @@ impl<T: EthSpec> ExecutionLayer<T> {
                                     falling back to local execution engine."
                                 );
                                 Ok(local)
-                            } else if header.prev_randao() != prev_randao {
+                            } else if header.prev_randao() != payload_attributes.prev_randao() {
                                 warn!(
                                     self.log(),
                                     "Invalid prev randao from connected builder, \
@@ -781,7 +759,7 @@ impl<T: EthSpec> ExecutionLayer<T> {
                                     bid from connected builder, falling back to local execution engine.");
                                 Ok(local)
                             } else {
-                                if header.fee_recipient() != suggested_fee_recipient {
+                                if header.fee_recipient() != payload_attributes.suggested_fee_recipient() {
                                     info!(
                                         self.log(),
                                         "Fee recipient from connected builder does \
@@ -820,13 +798,9 @@ impl<T: EthSpec> ExecutionLayer<T> {
         }
         self.get_full_payload_caching(
             parent_hash,
-            timestamp,
-            prev_randao,
-            suggested_fee_recipient,
+            payload_attributes,
             forkchoice_update_params,
             current_fork,
-            #[cfg(feature = "withdrawals")]
-            withdrawals,
         )
         .await
     }
@@ -835,22 +809,15 @@ impl<T: EthSpec> ExecutionLayer<T> {
     async fn get_full_payload<Payload: AbstractExecPayload<T>>(
         &self,
         parent_hash: ExecutionBlockHash,
-        timestamp: u64,
-        prev_randao: Hash256,
-        suggested_fee_recipient: Address,
+        payload_attributes: &PayloadAttributes,
         forkchoice_update_params: ForkchoiceUpdateParameters,
         current_fork: ForkName,
-        #[cfg(feature = "withdrawals")] withdrawals: Option<Vec<Withdrawal>>,
     ) -> Result<BlockProposalContents<T, Payload>, Error> {
         self.get_full_payload_with(
             parent_hash,
-            timestamp,
-            prev_randao,
-            suggested_fee_recipient,
+            payload_attributes,
             forkchoice_update_params,
             current_fork,
-            #[cfg(feature = "withdrawals")]
-            withdrawals,
             noop,
         )
         .await
@@ -860,22 +827,15 @@ impl<T: EthSpec> ExecutionLayer<T> {
     async fn get_full_payload_caching<Payload: AbstractExecPayload<T>>(
         &self,
         parent_hash: ExecutionBlockHash,
-        timestamp: u64,
-        prev_randao: Hash256,
-        suggested_fee_recipient: Address,
+        payload_attributes: &PayloadAttributes,
         forkchoice_update_params: ForkchoiceUpdateParameters,
         current_fork: ForkName,
-        #[cfg(feature = "withdrawals")] withdrawals: Option<Vec<Withdrawal>>,
     ) -> Result<BlockProposalContents<T, Payload>, Error> {
         self.get_full_payload_with(
             parent_hash,
-            timestamp,
-            prev_randao,
-            suggested_fee_recipient,
+            payload_attributes,
             forkchoice_update_params,
             current_fork,
-            #[cfg(feature = "withdrawals")]
-            withdrawals,
             Self::cache_payload,
         )
         .await
@@ -884,20 +844,15 @@ impl<T: EthSpec> ExecutionLayer<T> {
     async fn get_full_payload_with<Payload: AbstractExecPayload<T>>(
         &self,
         parent_hash: ExecutionBlockHash,
-        timestamp: u64,
-        prev_randao: Hash256,
-        suggested_fee_recipient: Address,
+        payload_attributes: &PayloadAttributes,
         forkchoice_update_params: ForkchoiceUpdateParameters,
         current_fork: ForkName,
-        #[cfg(feature = "withdrawals")] withdrawals: Option<Vec<Withdrawal>>,
         f: fn(&ExecutionLayer<T>, &ExecutionPayload<T>) -> Option<ExecutionPayload<T>>,
     ) -> Result<BlockProposalContents<T, Payload>, Error> {
-        #[cfg(feature = "withdrawals")]
-        let withdrawals_ref = &withdrawals;
         self.engine()
             .request(move |engine| async move {
                 let payload_id = if let Some(id) = engine
-                    .get_payload_id(parent_hash, timestamp, prev_randao, suggested_fee_recipient)
+                    .get_payload_id(&parent_hash, payload_attributes)
                     .await
                 {
                     // The payload id has been cached for this engine.
@@ -922,22 +877,11 @@ impl<T: EthSpec> ExecutionLayer<T> {
                             .finalized_hash
                             .unwrap_or_else(ExecutionBlockHash::zero),
                     };
-                    // This must always be the latest PayloadAttributes
-                    // FIXME: How to non-capella EIP4844 testnets handle this?
-                    let payload_attributes = PayloadAttributes::V2(PayloadAttributesV2 {
-                        timestamp,
-                        prev_randao,
-                        suggested_fee_recipient,
-                        #[cfg(feature = "withdrawals")]
-                        withdrawals: withdrawals_ref.clone(),
-                        #[cfg(not(feature = "withdrawals"))]
-                        withdrawals: None,
-                    });
 
                     let response = engine
                         .notify_forkchoice_updated(
                             fork_choice_state,
-                            Some(payload_attributes),
+                            Some(payload_attributes.clone()),
                             self.log(),
                         )
                         .await?;
@@ -966,9 +910,9 @@ impl<T: EthSpec> ExecutionLayer<T> {
                             debug!(
                                 self.log(),
                                 "Issuing engine_getBlobsBundle";
-                                "suggested_fee_recipient" => ?suggested_fee_recipient,
-                                "prev_randao" => ?prev_randao,
-                                "timestamp" => timestamp,
+                                "suggested_fee_recipient" => ?payload_attributes.suggested_fee_recipient(),
+                                "prev_randao" => ?payload_attributes.prev_randao(),
+                                "timestamp" => payload_attributes.timestamp(),
                                 "parent_hash" => ?parent_hash,
                             );
                             Some(engine.api.get_blobs_bundle_v1::<T>(payload_id).await)
@@ -979,16 +923,16 @@ impl<T: EthSpec> ExecutionLayer<T> {
                     debug!(
                         self.log(),
                         "Issuing engine_getPayload";
-                        "suggested_fee_recipient" => ?suggested_fee_recipient,
-                        "prev_randao" => ?prev_randao,
-                        "timestamp" => timestamp,
+                        "suggested_fee_recipient" => ?payload_attributes.suggested_fee_recipient(),
+                        "prev_randao" => ?payload_attributes.prev_randao(),
+                        "timestamp" => payload_attributes.timestamp(),
                         "parent_hash" => ?parent_hash,
                     );
                     engine.api.get_payload::<T>(current_fork, payload_id).await
                 };
                 let (blob, payload) = tokio::join!(blob_fut, payload_fut);
                 let payload = payload.map(|full_payload| {
-                    if full_payload.fee_recipient() != suggested_fee_recipient {
+                    if full_payload.fee_recipient() != payload_attributes.suggested_fee_recipient() {
                         error!(
                             self.log(),
                             "Inconsistent fee recipient";
@@ -998,7 +942,7 @@ impl<T: EthSpec> ExecutionLayer<T> {
                             ensure that the value of suggested_fee_recipient is set correctly and \
                             that the Execution Engine is trusted.",
                             "fee_recipient" => ?full_payload.fee_recipient(),
-                            "suggested_fee_recipient" => ?suggested_fee_recipient,
+                            "suggested_fee_recipient" => ?payload_attributes.suggested_fee_recipient(),
                         );
                     }
                     if f(self, &full_payload).is_some() {
