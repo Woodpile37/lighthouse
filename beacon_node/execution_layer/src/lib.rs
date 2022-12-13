@@ -1466,7 +1466,7 @@ impl<T: EthSpec> ExecutionLayer<T> {
         let transactions = VariableList::new(
             block
                 .transactions()
-                .into_iter()
+                .iter()
                 .map(|transaction| VariableList::new(transaction.rlp().to_vec()))
                 .collect::<Result<_, _>>()
                 .map_err(ApiError::DeserializeTransaction)?,
