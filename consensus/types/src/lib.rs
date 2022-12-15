@@ -122,7 +122,7 @@ pub use crate::blobs_sidecar::BlobsSidecar;
 pub use crate::chain_spec::{ChainSpec, Config, Domain};
 pub use crate::checkpoint::Checkpoint;
 pub use crate::config_and_preset::{
-    ConfigAndPreset, ConfigAndPresetAltair, ConfigAndPresetBellatrix,
+    ConfigAndPreset, ConfigAndPresetBellatrix, ConfigAndPresetCapella,
 };
 pub use crate::contribution_and_proof::ContributionAndProof;
 pub use crate::deposit::{Deposit, DEPOSIT_TREE_DEPTH};
@@ -149,7 +149,7 @@ pub use crate::participation_flags::ParticipationFlags;
 pub use crate::participation_list::ParticipationList;
 pub use crate::payload::{BlindedPayload, BlockType, ExecPayload, FullPayload};
 pub use crate::pending_attestation::PendingAttestation;
-pub use crate::preset::{AltairPreset, BasePreset, BellatrixPreset};
+pub use crate::preset::{AltairPreset, BasePreset, BellatrixPreset, CapellaPreset};
 pub use crate::proposer_preparation_data::ProposerPreparationData;
 pub use crate::proposer_slashing::ProposerSlashing;
 pub use crate::relative_epoch::{Error as RelativeEpochError, RelativeEpoch};
