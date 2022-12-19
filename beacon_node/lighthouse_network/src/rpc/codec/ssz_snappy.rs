@@ -754,8 +754,21 @@ mod tests {
         }
     }
 
+    fn blbrange_request() -> BlobsByRangeRequest {
+        BlobsByRangeRequest {
+            start_slot: 0,
+            count: 10,
+        }
+    }
+
     fn bbroot_request() -> BlocksByRootRequest {
         BlocksByRootRequest {
+            block_roots: VariableList::from(vec![Hash256::zero()]),
+        }
+    }
+
+    fn blbroot_request() -> BlobsByRootRequest {
+        BlobsByRootRequest {
             block_roots: VariableList::from(vec![Hash256::zero()]),
         }
     }
@@ -1373,6 +1386,8 @@ mod tests {
             OutboundRequest::Goodbye(GoodbyeReason::Fault),
             OutboundRequest::BlocksByRange(bbrange_request()),
             OutboundRequest::BlocksByRoot(bbroot_request()),
+            OutboundRequest::BlobsByRange(blbrange_request()),
+            OutboundRequest::BlobsByRoot(blbroot_request()),
             OutboundRequest::MetaData(PhantomData::<Spec>),
         ];
         for req in requests.iter() {
