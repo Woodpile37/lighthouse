@@ -425,6 +425,9 @@ fn context_bytes<T: EthSpec>(
                     SignedBeaconBlock::Base { .. } => Some(fork_context.genesis_context_bytes()),
                 };
             }
+            if let RPCResponse::BlobsByRange(_) | RPCResponse::BlobsByRoot(_) = rpc_variant {
+                return fork_context.to_context_bytes(ForkName::Eip4844);
+            }
         }
     }
     None
