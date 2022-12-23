@@ -12,7 +12,6 @@ use lighthouse_network::rpc::*;
 use lighthouse_network::{PeerId, PeerRequestId, ReportSource, Response, SyncInfo};
 use slog::{debug, error};
 use slot_clock::SlotClock;
-use ssz_types::VariableList;
 use std::sync::Arc;
 use task_executor::TaskExecutor;
 use types::{Epoch, EthSpec, Hash256, SignedBeaconBlockAndBlobsSidecar, Slot};
@@ -507,7 +506,7 @@ impl<T: BeaconChainTypes> Worker<T> {
     /// Handle a `BlobsByRange` request from the peer.
     pub fn handle_blobs_by_range_request(
         self,
-        executor: TaskExecutor,
+        _executor: TaskExecutor,
         send_on_drop: SendOnDrop,
         peer_id: PeerId,
         request_id: PeerRequestId,
@@ -582,7 +581,7 @@ impl<T: BeaconChainTypes> Worker<T> {
         let block_roots = block_roots.into_iter().flatten().collect::<Vec<_>>();
 
         let mut blobs_sent = 0;
-        let mut send_response = true;
+        let send_response = true;
 
         for root in block_roots {
             match self.chain.store.get_blobs(&root) {
