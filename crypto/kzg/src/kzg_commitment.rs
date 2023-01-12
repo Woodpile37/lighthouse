@@ -56,3 +56,12 @@ impl Encode for KZGCommitment {
         self.0.ssz_bytes_len()
     }
 }
+
+#[cfg(feature = "arbitrary")]
+impl arbitrary::Arbitrary<'_> for KzgCommitment {
+    fn arbitrary(u: &mut arbitrary::Unstructured<'_>) -> arbitrary::Result<Self> {
+        let mut bytes = [0u8; KZG_COMMITMENT_BYTES_LEN];
+        u.fill_buffer(&mut bytes)?;
+        Ok(KzgCommitment(bytes))
+    }
+}
