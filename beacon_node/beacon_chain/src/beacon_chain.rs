@@ -602,10 +602,10 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
                 start_slot,
                 end_slot,
                 || {
-                    (
+                    Ok((
                         head.beacon_state.clone_with_only_committee_caches(),
                         head.beacon_block_root,
-                    )
+                    ))
                 },
                 &self.spec,
             )?;
@@ -699,10 +699,10 @@ impl<T: BeaconChainTypes> BeaconChain<T> {
                 start_slot,
                 end_slot,
                 || {
-                    (
+                    Ok((
                         head.beacon_state.clone_with_only_committee_caches(),
                         head.beacon_state_root(),
-                    )
+                    ))
                 },
                 &self.spec,
             )?;
