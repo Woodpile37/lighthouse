@@ -190,7 +190,7 @@ impl<E: EthSpec, Payload: ExecPayload<E>> SignedBeaconBlock<E, Payload> {
         }
 
         let domain = spec.get_domain(
-            self.slot().epoch(E::slots_per_epoch()),
+            self.epoch(),
             Domain::BeaconProposer,
             fork,
             genesis_validators_root,
@@ -220,6 +220,11 @@ impl<E: EthSpec, Payload: ExecPayload<E>> SignedBeaconBlock<E, Payload> {
     /// Convenience accessor for the block's slot.
     pub fn slot(&self) -> Slot {
         self.message().slot()
+    }
+
+    /// Convenience accessor for the block's epoch.
+    pub fn epoch(&self) -> Epoch {
+        self.message().slot().epoch(E::slots_per_epoch())
     }
 
     /// Convenience accessor for the block's parent root.
