@@ -257,14 +257,6 @@ impl<T: BeaconChainTypes> Worker<T> {
                                     "request_root" => ?root,
                                     "finalized_data_availability_boundary" => finalized_data_availability_boundary,
                                 );
-                                self.send_error_response(
-                                    peer_id,
-                                    RPCResponseErrorCode::ResourceUnavailable,
-                                    "Blobs unavailable".into(),
-                                    request_id,
-                                );
-                               send_response = false;
-                               break;
                             } else {
                                 debug!(
                                     self.log,
@@ -274,15 +266,7 @@ impl<T: BeaconChainTypes> Worker<T> {
                                     "request_root" => ?root,
                                     "finalized_data_availability_boundary" => finalized_data_availability_boundary,
                                 );
-                                self.send_error_response(
-                                    peer_id,
-                                    RPCResponseErrorCode::ResourceUnavailable,
-                                    "Blobs unavailable".into(),
-                                    request_id,
-                                );
                             }
-                            send_response = false;
-                            break;
                         }
                         Ok((None, Some(_))) => {
                             debug!(
@@ -679,13 +663,6 @@ impl<T: BeaconChainTypes> Worker<T> {
                         "No blobs or block in the store for block root";
                         "block_root" => ?root
                     );
-                    self.send_error_response(
-                        peer_id,
-                        RPCResponseErrorCode::ResourceUnavailable,
-                        "Blobs unavailable".into(),
-                        request_id,
-                    );
-                    send_response = false;
                     break;
                 }
                 Err(BeaconChainError::BlobsUnavailable) => {
