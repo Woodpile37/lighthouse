@@ -350,7 +350,7 @@ impl<T: BeaconChainTypes> Worker<T> {
 
                 // send stream termination
                 if send_response {
-                    self.send_response(peer_id, Response::BlocksByRoot(None), request_id);
+                    self.send_response(peer_id, Response::BlobsByRoot(None), request_id);
                 }
                 drop(send_on_drop);
             },
