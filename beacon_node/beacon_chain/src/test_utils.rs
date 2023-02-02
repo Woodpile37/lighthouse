@@ -425,6 +425,7 @@ where
             DEFAULT_TERMINAL_BLOCK,
             shanghai_time,
             eip4844_time,
+            None,
             Some(JwtKey::from_slice(&DEFAULT_JWT_SECRET).unwrap()),
             spec,
             None,
@@ -434,7 +435,11 @@ where
         self
     }
 
-    pub fn mock_execution_layer_with_builder(mut self, beacon_url: SensitiveUrl) -> Self {
+    pub fn mock_execution_layer_with_builder(
+        mut self,
+        beacon_url: SensitiveUrl,
+        builder_threshold: Option<u128>,
+    ) -> Self {
         // Get a random unused port
         let port = unused_port::unused_tcp_port().unwrap();
         let builder_url = SensitiveUrl::parse(format!("http://127.0.0.1:{port}").as_str()).unwrap();
@@ -451,6 +456,7 @@ where
             DEFAULT_TERMINAL_BLOCK,
             shanghai_time,
             eip4844_time,
+            builder_threshold,
             Some(JwtKey::from_slice(&DEFAULT_JWT_SECRET).unwrap()),
             spec.clone(),
             Some(builder_url.clone()),
