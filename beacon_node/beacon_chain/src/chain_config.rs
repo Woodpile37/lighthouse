@@ -67,6 +67,10 @@ pub struct ChainConfig {
     pub prepare_payload_lookahead: Duration,
     /// Use EL-free optimistic sync for the finalized part of the chain.
     pub optimistic_finalized_sync: bool,
+    /// Whether to send payload attributes every slot, regardless of connected proposers.
+    ///
+    /// This is useful for block builders and testing.
+    pub always_prepare_payload: bool,
 }
 
 impl Default for ChainConfig {
@@ -92,6 +96,7 @@ impl Default for ChainConfig {
             checkpoint_sync_url_timeout: 60,
             prepare_payload_lookahead: Duration::from_secs(4),
             optimistic_finalized_sync: true,
+            always_prepare_payload: false,
         }
     }
 }
