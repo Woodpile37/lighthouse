@@ -10,7 +10,7 @@ use std::hash::Hash;
 use test_random_derive::TestRandom;
 use tree_hash::{PackedEncoding, TreeHash};
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum BlockType {
     Blinded,
     Full,
