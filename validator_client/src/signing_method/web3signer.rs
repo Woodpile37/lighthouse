@@ -61,7 +61,6 @@ pub enum Web3SignerObject<'a, T: EthSpec, Payload: ExecPayload<T>> {
     RandaoReveal {
         epoch: Epoch,
     },
-    #[allow(dead_code)]
     VoluntaryExit(&'a VoluntaryExit),
     SyncCommitteeMessage {
         beacon_block_root: Hash256,
