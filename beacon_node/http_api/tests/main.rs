@@ -3,4 +3,5 @@
 
 pub mod fork_tests;
 pub mod interactive_tests;
+pub mod status_tests;
 pub mod tests;
