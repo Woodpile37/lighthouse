@@ -605,7 +605,7 @@ impl<'a, T: BeaconChainTypes> VerifiedAggregatedAttestation<'a, T> {
         if chain
             .observed_aggregators
             .write()
-            .observe_validator(attestation.data.target.epoch, aggregator_index as usize)
+            .observe_validator(attestation.data.target.epoch, aggregator_index as usize, ())
             .map_err(BeaconChainError::from)?
         {
             return Err(Error::PriorAttestationKnown {
@@ -875,7 +875,7 @@ impl<'a, T: BeaconChainTypes> VerifiedUnaggregatedAttestation<'a, T> {
         if chain
             .observed_gossip_attesters
             .write()
-            .observe_validator(attestation.data.target.epoch, validator_index as usize)
+            .observe_validator(attestation.data.target.epoch, validator_index as usize, ())
             .map_err(BeaconChainError::from)?
         {
             return Err(Error::PriorAttestationKnown {
