@@ -2167,6 +2167,7 @@ async fn weak_subjectivity_sync() {
                 Arc::new(full_block),
                 CountUnrealized::True,
                 NotifyExecutionLayer::Yes,
+                || Ok(()),
             )
             .await
             .unwrap();

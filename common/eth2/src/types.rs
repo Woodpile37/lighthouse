@@ -6,7 +6,7 @@ use lighthouse_network::{ConnectionDirection, Enr, Multiaddr, PeerConnectionStat
 use mediatype::{names, MediaType, MediaTypeList};
 use serde::{Deserialize, Serialize};
 use std::convert::TryFrom;
-use std::fmt;
+use std::fmt::{self, Display};
 use std::str::{from_utf8, FromStr};
 use std::time::Duration;
 pub use types::*;
@@ -1270,6 +1270,50 @@ impl<T: EthSpec, Payload: AbstractExecPayload<T>> ForkVersionDeserialize
             kzg_aggregate_proof: helper.kzg_aggregate_proof,
         })
     }
+}
+
+#[derive(Copy, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(rename_all = "snake_case")]
+pub enum BroadcastValidation {
+    Gossip,
+    Consensus,
+    ConsensusAndEquivocation,
+}
+
+impl Default for BroadcastValidation {
+    fn default() -> Self {
+        Self::Gossip
+    }
+}
+
+impl Display for BroadcastValidation {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Self::Gossip => write!(f, "gossip"),
+            Self::Consensus => write!(f, "consensus"),
+            Self::ConsensusAndEquivocation => write!(f, "consensus_and_equivocation"),
+        }
+    }
+}
+
+impl FromStr for BroadcastValidation {
+    type Err = &'static str;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "gossip" => Ok(Self::Gossip),
+            "consensus" => Ok(Self::Consensus),
+            "consensus_and_equivocation" => Ok(Self::ConsensusAndEquivocation),
+            _ => Err("Invalid broadcast validation level"),
+        }
+    }
+}
+
+#[derive(Default, Deserialize, Serialize)]
+#[serde(rename_all = "snake_case")]
+pub struct BroadcastValidationQuery {
+    #[serde(default)]
+    pub broadcast_validation: BroadcastValidation,
 }
 
 #[cfg(test)]

@@ -744,6 +744,15 @@ where
         state.get_block_root(slot).unwrap() == state.get_block_root(slot - 1).unwrap()
     }
 
+    pub async fn make_blinded_block(
+        &self,
+        state: BeaconState<E>,
+        slot: Slot,
+    ) -> (SignedBlindedBeaconBlock<E>, BeaconState<E>) {
+        let (unblinded, new_state) = self.make_block(state, slot).await;
+        (unblinded.into(), new_state)
+    }
+
     /// Returns a newly created block, signed by the proposer for the given slot.
     pub async fn make_block(
         &self,
@@ -1684,7 +1693,12 @@ where
         self.set_current_slot(slot);
         let block_hash: SignedBeaconBlockHash = self
             .chain
-            .process_block(block_root, Arc::new(block), NotifyExecutionLayer::Yes)
+            .process_block(
+                block_root,
+                Arc::new(block),
+                NotifyExecutionLayer::Yes,
+                || Ok(()),
+            )
             .await?
             .into();
         self.chain.recompute_head_at_current_slot().await;
@@ -1701,6 +1715,7 @@ where
                 block.canonical_root(),
                 Arc::new(block),
                 NotifyExecutionLayer::Yes,
+                || Ok(()),
             )
             .await?
             .into();
