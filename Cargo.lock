@@ -7447,6 +7447,7 @@ dependencies = [
  "slog",
  "smallvec",
  "state_processing",
+ "strum",
  "superstruct 0.6.0",
  "swap_or_not_shuffle",
  "tempfile",
