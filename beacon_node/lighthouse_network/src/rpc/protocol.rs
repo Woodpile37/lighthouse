@@ -7,7 +7,7 @@ use crate::rpc::{
 use futures::future::BoxFuture;
 use futures::prelude::{AsyncRead, AsyncWrite};
 use futures::{FutureExt, StreamExt};
-use libp2p::core::{InboundUpgrade, ProtocolName, UpgradeInfo};
+use libp2p::core::{InboundUpgrade, UpgradeInfo};
 use ssz::Encode;
 use ssz_types::VariableList;
 use std::io;
@@ -305,6 +305,12 @@ pub struct ProtocolId {
     protocol_id: String,
 }
 
+impl AsRef<str> for ProtocolId {
+    fn as_ref(&self) -> &str {
+        self.protocol_id.as_ref()
+    }
+}
+
 impl ProtocolId {
     /// Returns min and max size for messages of given protocol id requests.
     pub fn rpc_request_limits(&self) -> RpcLimits {
@@ -392,12 +398,6 @@ impl ProtocolId {
             encoding,
             protocol_id,
         }
-    }
-}
-
-impl ProtocolName for ProtocolId {
-    fn protocol_name(&self) -> &[u8] {
-        self.protocol_id.as_bytes()
     }
 }
 
