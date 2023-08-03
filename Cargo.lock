@@ -7462,6 +7462,7 @@ dependencies = [
  "maplit",
  "merkle_proof",
  "parking_lot 0.12.1",
+ "paste",
  "rand 0.8.5",
  "rand_xorshift",
  "rayon",
