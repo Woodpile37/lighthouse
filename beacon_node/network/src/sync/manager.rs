@@ -465,7 +465,7 @@ impl<T: BeaconChainTypes> SyncManager<T> {
 
                     // If we would otherwise be synced, first check if we need to perform or
                     // complete a backfill sync.
-                    #[cfg(not(feature = "disable_backfill"))]
+                    #[cfg(not(feature = "disable-backfill"))]
                     if matches!(sync_state, SyncState::Synced) {
                         // Determine if we need to start/resume/restart a backfill sync.
                         match self.backfill_sync.start(&mut self.network) {
@@ -490,7 +490,7 @@ impl<T: BeaconChainTypes> SyncManager<T> {
                 }
                 Some((RangeSyncType::Finalized, start_slot, target_slot)) => {
                     // If there is a backfill sync in progress pause it.
-                    #[cfg(not(feature = "disable_backfill"))]
+                    #[cfg(not(feature = "disable-backfill"))]
                     self.backfill_sync.pause();
 
                     SyncState::SyncingFinalized {
@@ -500,7 +500,7 @@ impl<T: BeaconChainTypes> SyncManager<T> {
                 }
                 Some((RangeSyncType::Head, start_slot, target_slot)) => {
                     // If there is a backfill sync in progress pause it.
-                    #[cfg(not(feature = "disable_backfill"))]
+                    #[cfg(not(feature = "disable-backfill"))]
                     self.backfill_sync.pause();
 
                     SyncState::SyncingHead {
