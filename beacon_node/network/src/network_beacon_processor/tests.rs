@@ -17,7 +17,6 @@ use lighthouse_network::{
     MessageId, NetworkGlobals, PeerId,
 };
 use slot_clock::SlotClock;
-use std::cmp;
 use std::iter::Iterator;
 use std::sync::Arc;
 use std::time::Duration;
@@ -200,7 +199,6 @@ impl TestRig {
             sync_tx,
             network_globals,
             executor,
-            max_workers: cmp::max(1, num_cpus::get()),
             current_workers: 0,
             importing_blocks: duplicate_cache.clone(),
             invalid_block_storage: InvalidBlockStorage::Disabled,

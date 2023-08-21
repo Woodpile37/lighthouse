@@ -910,7 +910,6 @@ pub struct BeaconProcessor<T: BeaconChainTypes> {
     pub sync_tx: mpsc::UnboundedSender<SyncMessage<T::EthSpec>>,
     pub network_globals: Arc<NetworkGlobals<T::EthSpec>>,
     pub executor: TaskExecutor,
-    pub max_workers: usize,
     pub current_workers: usize,
     pub importing_blocks: DuplicateCache,
     pub log: Logger,
@@ -923,7 +922,7 @@ impl<T: BeaconChainTypes> BeaconProcessor<T> {
     /// - Performed immediately, if a worker is available.
     /// - Queued for later processing, if no worker is currently available.
     ///
-    /// Only `self.max_workers` will ever be spawned at one time. Each worker is a `tokio` task
+    /// Only `self.config.max_workers` will ever be spawned at one time. Each worker is a `tokio` task
     /// started with `spawn_blocking`.
     ///
     /// The optional `work_journal_tx` allows for an outside process to receive a log of all work
@@ -1044,7 +1043,7 @@ impl<T: BeaconChainTypes> BeaconProcessor<T> {
                     let _ = work_journal_tx.try_send(id);
                 }
 
-                let can_spawn = self.current_workers < self.max_workers;
+                let can_spawn = self.current_workers < self.config.max_workers;
                 let drop_during_sync = work_event
                     .as_ref()
                     .map_or(false, |event| event.drop_during_sync);
