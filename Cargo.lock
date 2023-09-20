@@ -449,7 +449,6 @@ dependencies = [
  "tokio-stream",
  "tree_hash",
  "types",
- "unused_port",
 ]
 
 [[package]]
@@ -2222,7 +2221,9 @@ dependencies = [
 name = "execution_layer"
 version = "0.1.0"
 dependencies = [
+ "arc-swap",
  "async-trait",
+ "axum",
  "builder_client",
  "bytes",
  "environment",
@@ -2236,6 +2237,7 @@ dependencies = [
  "fork_choice",
  "futures",
  "hex",
+ "hyper",
  "jsonwebtoken",
  "lazy_static",
  "lighthouse_metrics",
@@ -2951,7 +2953,6 @@ dependencies = [
  "tokio-stream",
  "tree_hash",
  "types",
- "unused_port",
  "warp",
  "warp_utils",
 ]
